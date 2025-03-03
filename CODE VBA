@@ -2,3 +2,53 @@
 Sub AutoFitSelectedColumns()
     Selection.EntireColumn.AutoFit
 End Sub
+
+
+# --------------- GENERATE NO.
+Sub GenerateSerialNumbers()
+    Dim ws As Worksheet
+    Dim colRange As Range
+    Dim startCell As Range
+    Dim lastRow As Long
+    Dim i As Long
+
+    ' Set active worksheet
+    Set ws = ActiveSheet
+
+    ' Prompt user to select the reference column
+    On Error Resume Next
+    Set colRange = Application.InputBox("Select the reference column with data:", Type:=8)
+    On Error GoTo 0
+
+    ' Exit if user cancels or selects an invalid range
+    If colRange Is Nothing Then Exit Sub
+
+    ' Get the first column number from selection
+    Dim colNum As Integer
+    colNum = colRange.Column
+
+    ' Find the last row with data in the selected column
+    lastRow = ws.Cells(ws.Rows.Count, colNum).End(xlUp).Row
+
+    ' Exit if no valid data is found
+    If lastRow < 2 Then
+        MsgBox "The selected column does not contain valid data!", vbExclamation, "Error"
+        Exit Sub
+    End If
+
+    ' Prompt user to select the starting cell for serial numbers
+    On Error Resume Next
+    Set startCell = Application.InputBox("Select the starting cell for serial numbers:", Type:=8)
+    On Error GoTo 0
+
+    ' Exit if user cancels or selects an invalid range
+    If startCell Is Nothing Then Exit Sub
+
+    ' Fill serial numbers starting from the selected cell
+    For i = 1 To lastRow - 1
+        startCell.Offset(i - 1, 0).Value = i
+    Next i
+ 
+End Sub
+
+# ---------------------------------------------
