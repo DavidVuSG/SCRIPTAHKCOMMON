@@ -1,3 +1,4 @@
+# - ------------- AUTO FIT COLUMN
 Sub AutoFitSelectedColumns()
     Selection.EntireColumn.AutoFit
 End Sub
