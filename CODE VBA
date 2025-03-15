@@ -51,4 +51,219 @@ Sub GenerateSerialNumbers()
  
 End Sub
 
-# ---------------------------------------------
+# --------------------------------------------- TẠO SỐ THỨ TỰ
+
+Sub GenerateSerialNumbersSimple()
+    Dim ws As Worksheet
+    Dim startCell As Range
+    Dim refCol As Range
+    Dim lastRow As Long
+    Dim i As Long
+
+    ' Set active worksheet
+    Set ws = ActiveSheet
+
+    ' Prompt user to select the starting cell for serial numbers
+    On Error Resume Next
+    Set startCell = Application.InputBox("Select the starting cell for serial numbers:", Type:=8)
+    On Error GoTo 0
+
+    ' Exit if user cancels or selects an invalid range
+    If startCell Is Nothing Then Exit Sub
+    
+    ' Determine the reference column (the next column to the right of startCell)
+    Set refCol = ws.Cells(1, startCell.Column + 1).EntireColumn
+    
+    ' Find the last row with data in the reference column
+    lastRow = ws.Cells(ws.Rows.Count, refCol.Column).End(xlUp).Row
+
+    ' Exit if no valid data is found
+    If lastRow < 2 Then
+        MsgBox "The reference column does not contain valid data!", vbExclamation, "Error"
+        Exit Sub
+    End If
+
+    ' Fill serial numbers starting from the selected cell
+    For i = 1 To lastRow - 1
+        startCell.Offset(i - 1, 0).Value = i
+    Next i
+
+End Sub
+
+# --------------------------------------------- XÓA CÔNG THỨC
+
+
+Sub CopyPasteValues()
+    Dim rng As Range
+    
+    ' Check if a range is selected
+    If TypeName(Selection) <> "Range" Then
+        MsgBox "Please select a range to copy and paste values.", vbExclamation
+        Exit Sub
+    End If
+    
+    Set rng = Selection
+    
+    ' Copy and paste values
+    rng.Copy
+    rng.PasteSpecial Paste:=xlPasteValues
+    
+    ' Clear clipboard
+    Application.CutCopyMode = False
+    
+ 
+End Sub
+
+
+# -------------------------------------------- IMPORT XLSX
+Sub IMPORTXLSX()
+    Dim filePath As String
+    Dim ImportWorkbook As Workbook
+    Dim ImportSheet As Worksheet
+    Dim NewSheet As Worksheet
+    Dim ws As Worksheet
+    Dim SheetExists As Boolean
+
+    ' Hi?n th? h?p tho?i ch?n t?p
+    filePath = Application.GetOpenFilename(FileFilter:="Excel Files (*.xls; *.xlsx), *.xls; *.xlsx", Title:="Ch?n t?p Excel c?n import")
+    
+    ' Ki?m tra n?u không ch?n t?p
+    If filePath = "False" Then
+        MsgBox "Không có t?p nào du?c ch?n.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Ki?m tra xem sheet "IMPORT" dã t?n t?i hay chua trong ActiveWorkbook
+    SheetExists = False
+    For Each ws In ActiveWorkbook.Sheets
+        If ws.Name = "IMPORT" Then
+            SheetExists = True
+            Set NewSheet = ws
+            Exit For
+        End If
+    Next ws
+    
+    ' N?u chua có, t?o sheet m?i tên "IMPORT"
+    If Not SheetExists Then
+        Set NewSheet = ActiveWorkbook.Sheets.Add
+        NewSheet.Name = "IMPORT"
+    Else
+        ' Xóa d? li?u cu n?u sheet dã t?n t?i
+        NewSheet.Cells.Clear
+    End If
+
+    ' M? t?p Excel du?c ch?n
+    Application.ScreenUpdating = False
+    Set ImportWorkbook = Workbooks.Open(filePath)
+    
+    ' Gán sheet d?u tiên trong t?p du?c import
+    Set ImportSheet = ImportWorkbook.Sheets(1)
+    
+    ' Copy d? li?u t? t?p import vào sheet "IMPORT" c?a ActiveWorkbook
+    ImportSheet.UsedRange.Copy Destination:=NewSheet.Cells(1, 1)
+    
+    ' Ðóng t?p import
+    ImportWorkbook.Close SaveChanges:=False
+    Application.ScreenUpdating = True
+    
+    MsgBox "D? li?u dã du?c import thành công vào sheet 'IMPORT' c?a ActiveWorkbook!", vbInformation
+End Sub
+
+
+#---------------------------------------------- HIGHLIGHT ROW AND COLUMN
+
+Sub HIGHLIGHTROWCOL()
+    Dim Target As Range
+    On Error Resume Next
+    Set Target = ActiveCell
+    Application.ScreenUpdating = False
+
+    ' Clear the color of all cells on ActiveSheet
+    ActiveSheet.Cells.Interior.ColorIndex = 0
+    
+    If Not Target Is Nothing Then
+        With Target
+            ' Highlight row and column of the selected cell
+            .EntireRow.Interior.ColorIndex = 28
+            .EntireColumn.Interior.ColorIndex = 36
+        End With
+    End If
+
+    Application.ScreenUpdating = True
+    On Error GoTo 0
+End Sub
+
+
+# ---------------------------------------------- CONVERT NUMBER
+Sub CONVERTNUMBER()
+    Dim rng As Range
+    Dim cell As Range
+
+    ' Hi?n th? h?p tho?i d? ngu?i dùng ch?n vùng
+    On Error Resume Next
+    Set rng = Application.InputBox("Select the range to convert values from text to number:", "Select Range", Type:=8)
+    On Error GoTo 0
+
+    ' Thoát n?u ngu?i dùng không ch?n ho?c h?y
+    If rng Is Nothing Then
+        MsgBox "No range selected. Operation canceled.", vbExclamation, "Canceled"
+        Exit Sub
+    End If
+
+    ' L?p qua t?ng ô trong vùng du?c ch?n
+    For Each cell In rng
+        If Not IsEmpty(cell.Value) Then
+            If IsNumeric(Application.Substitute(cell.Value, ",", "")) Then
+                ' Lo?i b? d?u phân cách hàng nghìn (",") và gi? l?i d?u th?p phân (".")
+                cell.Value = CDbl(Application.Substitute(cell.Value, ",", ""))
+            End If
+        End If
+    Next cell
+
+End Sub
+
+
+# --------------------------------------------COMPARE TWO COLS
+
+Sub COMPARETWOCOLS()
+    Dim col1 As Range
+    Dim col2 As Range
+    Dim lastRow As Long
+    Dim i As Long
+    Dim ws As Worksheet
+    
+    Set ws = ActiveSheet
+    On Error Resume Next
+    Set col1 = Application.InputBox("Select the first column:", Type:=8)
+    Set col2 = Application.InputBox("Select the second column:", Type:=8)
+    On Error GoTo 0
+    
+    If col1 Is Nothing Or col2 Is Nothing Then
+        MsgBox "Both columns must be selected. Try again."
+        Exit Sub
+    End If
+    
+    If col1.Columns.Count > 1 Or col2.Columns.Count > 1 Then
+        MsgBox "Please select only one column each."
+        Exit Sub
+    End If
+    
+    lastRow = ws.Cells(ws.Rows.Count, col1.Column).End(xlUp).Row
+    Application.ScreenUpdating = False
+    
+    For i = 1 To lastRow
+        If ws.Cells(i, col1.Column).Value <> ws.Cells(i, col2.Column).Value Then
+            ws.Cells(i, col1.Column).Interior.Color = RGB(255, 255, 0) ' YELLOW
+            ws.Cells(i, col2.Column).Interior.Color = RGB(255, 255, 0) ' YELLOW
+        Else
+            ws.Cells(i, col1.Column).Interior.ColorIndex = 0
+            ws.Cells(i, col2.Column).Interior.ColorIndex = 0
+        End If
+    Next i
+    
+    Application.ScreenUpdating = True
+End Sub
+
+
+
+
